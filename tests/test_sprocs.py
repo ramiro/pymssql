@@ -534,7 +534,9 @@ class TestSPWithOutputParmsAndQueryResult(unittest.TestCase):
         proc.bind('hello', _mssql.SQLVARCHAR, '@in_arg')
         proc.bind(None, _mssql.SQLVARCHAR, '@out_arg', output=True, max_length=4)
         proc.execute()
-        print proc.parameters
+
+        eq_(proc.parameters['@in_arg'], 'hello')
+        eq_(proc.parameters['@out_arg'], '???hello')
 
         for row_dict in self.mssql:
             eq_(row_dict, {0: 'hello!', 1: 'hello!!'})
