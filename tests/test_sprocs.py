@@ -490,3 +490,51 @@ class TestSPWithQueryResult(unittest.TestCase):
 
         for row_dict in self.mssql:
             eq_(row_dict, {0: 'hello!', 1: 'hello!!'})
+
+
+class TestSPWithOutputParmsAndQueryResult(unittest.TestCase):
+
+    SP_NAME = 'SPWithAQueryAndOutParm'
+
+    def setUp(self):
+        self.mssql = mssqlconn()
+        self.pymssql = pymssqlconn()
+
+        self.mssql.execute_non_query("""
+        CREATE PROCEDURE [dbo].[%(spname)s]
+                @in_arg NVARCHAR(64),
+                @out_arg NVARCHAR(64) output
+        AS
+        BEGIN
+                SET @out_arg = N'???' + @in_arg
+                SELECT @in_arg + N'!', @in_arg + N'!!'
+        END
+        """ % {'spname': self.SP_NAME})
+
+    def tearDown(self):
+        self.mssql.execute_non_query('DROP PROCEDURE [dbo].[%(spname)s]' % {'spname': self.SP_NAME})
+        self.pymssql.close()
+        self.mssql.close()
+
+    def testPymssql(self):
+        cursor = self.pymssql.cursor()
+        retval = cursor.callproc(
+                        self.SP_NAME,
+                        ('hello', pymssql.output(str)))
+
+        eq_(retval[0], 'hello')
+        eq_(retval[1], '???hello')
+
+        a, b = cursor.fetchone()
+        eq_(a, 'hello!')
+        eq_(b, 'hello!!')
+
+    def test_mssql(self):
+        proc = self.mssql.init_procedure(self.SP_NAME)
+        proc.bind('hello', _mssql.SQLVARCHAR, '@in_arg')
+        proc.bind(None, _mssql.SQLVARCHAR, '@out_arg', output=True, max_length=4)
+        proc.execute()
+        print proc.parameters
+
+        for row_dict in self.mssql:
+            eq_(row_dict, {0: 'hello!', 1: 'hello!!'})
