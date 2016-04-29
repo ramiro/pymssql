@@ -292,8 +292,6 @@ class build_ext(_build_ext):
                     libraries = [
                         'db-lib', 'tds',
                         'ws2_32', 'wsock32', 'kernel32', 'shell32',
-                        'libeay{}MD'.format(BITNESS),
-                        'ssleay{}MD'.format(BITNESS),
                     ]
                     if LINK_OPENSSL:
                         libraries.extend([
