@@ -290,7 +290,7 @@ class build_ext(_build_ext):
                     freetds_dir = 'vs2008'
                 if LINK_FREETDS_STATICALLY:
                     libraries = [
-                        'db-lib', 'tds',
+                        'db-lib', 'tds', 'replacements',
                         'ws2_32', 'wsock32', 'kernel32', 'shell32',
                     ]
                     if LINK_OPENSSL:
